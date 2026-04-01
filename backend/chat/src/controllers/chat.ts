@@ -230,9 +230,10 @@ export const sendMessage = TryCatch(async (req: AuthenticatedRequest, res) => {
 
 
 export const getMessagesByChat = TryCatch(async(req:AuthenticatedRequest,res)=>{
-    const userId = req.user?._id;
-    const {chatId} = req.params;
+    const userId = req.user?._id;          // Logged-in user id
+    const {chatId} = req.params;           // Chat id from URL params
 
+    // Check if user logged in
     if (!userId) {
         res.status(401).json({
             message: "Unauthorised",
@@ -240,6 +241,7 @@ export const getMessagesByChat = TryCatch(async(req:AuthenticatedRequest,res)=>{
         return;
     }
 
+    // Check if chatId provided
     if (!chatId) {
         res.status(400).json({
             message: "ChatId required",
@@ -247,8 +249,9 @@ export const getMessagesByChat = TryCatch(async(req:AuthenticatedRequest,res)=>{
         return;
     }
 
-    const chat = await Chat.findById(chatId);
+    const chat = await Chat.findById(chatId);  // Find chat by id
 
+    // Chat not found
     if (!chat) {
         res.status(404).json({
             message: "Chat not found",
@@ -256,9 +259,10 @@ export const getMessagesByChat = TryCatch(async(req:AuthenticatedRequest,res)=>{
         return;
     }
 
+    // Check if logged-in user is part of this chat
     const isUserInChat = chat.users.some(
-        (userId)=>userId.toString()=== userId.toString()
-    );
+        (id)=>id.toString()=== userId.toString()
+    );  //DIFF
 
     if(!isUserInChat){
         res.status(403).json({
@@ -267,12 +271,14 @@ export const getMessagesByChat = TryCatch(async(req:AuthenticatedRequest,res)=>{
         return;
     }
 
+    // Find unread messages sent by other user
     const messagesToMarkSeen = await Messages.find({
         chatId: chatId,
         sender: {$ne: userId.toString()},
         seen: false,
     });
 
+    // Mark those messages as seen
     await Messages.updateMany({
         chatId: chatId,
         sender: {$ne: userId.toString()},
@@ -282,11 +288,16 @@ export const getMessagesByChat = TryCatch(async(req:AuthenticatedRequest,res)=>{
         seenAt: new Date(),
     });
 
+    // Get all messages of this chat sorted by time
     const messages = await Messages.find({chatId}).sort({createdAt: 1});
 
-    const otherUserId = chat.users.find((id)=>id!==userId);
+    // Get the other participant id (not the logged-in user)
+    const otherUserId = chat.users.find(
+        (id)=>id.toString()!== userId.toString()
+    );
 
     try {
+        // Call user service to get other user's details
         const { data } = await axios.get(
             `${process.env.USER_SERVICE}/api/v1/user/${otherUserId}`
         );
@@ -298,19 +309,20 @@ export const getMessagesByChat = TryCatch(async(req:AuthenticatedRequest,res)=>{
             return;
         }
 
-        //SOCKET WORK PENDING 
+        // TODO: socket emit for seen messages
 
+        // Send messages + other user info
         res.json({
             messages,
             user: data,
         })
     } catch (error) {
         console.log(error);
+
+        // If user service fails, still send messages
         res.json({
             messages,
             user: {_id: otherUserId,name:"Unknown User"},
         });
     }
-
-
-})
+});

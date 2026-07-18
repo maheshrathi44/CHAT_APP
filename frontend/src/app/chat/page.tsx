@@ -285,7 +285,14 @@ const ChatApp = () => {
 
         moveChatToTop(message.chatId, message, false);
       } else {
-        moveChatToTop(message.chatId, message, true);
+        const chatExists = chats?.some((c) => c.chat._id === message.chatId);
+
+        if (!chatExists) {
+          // brand new conversation we haven't loaded yet - pull it in from the server
+          fetchChats();
+        } else {
+          moveChatToTop(message.chatId, message, true);
+        }
       }
     });
 
@@ -339,7 +346,7 @@ const ChatApp = () => {
       socket?.off("userTyping");
       socket?.off("userStoppedTyping");
     };
-  }, [socket, selectedUser, setChats, loggedInUser?._id]);
+  }, [socket, selectedUser, setChats, loggedInUser?._id, chats, fetchChats]);
 
   useEffect(() => {
     if (selectedUser) {

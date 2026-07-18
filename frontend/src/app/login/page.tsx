@@ -48,7 +48,6 @@ const LoginPage = () => {
       setIsAuth(true);
       fetchChats();
       fetchUsers();
-      router.push("/chat");
     } catch (error: any) {
       toast.error(error?.response?.data?.message ?? "Something went wrong. Please try again.");
     } finally {

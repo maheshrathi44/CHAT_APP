@@ -20,6 +20,7 @@ export const redisClient = createClient({
   url: redisUrl,
 });
 
+redisClient.on("error", (err) => console.error("Redis client error", err));
 
 redisClient.connect().then(()=>console.log("connected to redis")).catch(console.error);
 

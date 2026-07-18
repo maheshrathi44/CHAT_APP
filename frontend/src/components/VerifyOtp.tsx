@@ -98,7 +98,7 @@ const VerifyOtp = () => {
       fetchChats();
       fetchUsers();
     } catch (error: any) {
-      setError(error.response.data.message);
+      setError(error?.response?.data?.message ?? "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -114,7 +114,7 @@ const VerifyOtp = () => {
       toast.success(data.message);
       setTimer(60);
     } catch (error: any) {
-      setError(error.response.data.message);
+      setError(error?.response?.data?.message ?? "Something went wrong. Please try again.");
     } finally {
       setResendLoading(false);
     }

@@ -25,7 +25,7 @@ export const startSendOtpConsumer = async () => {
         channel.consume(queueName,async(msg)=>{
             if(msg){
                 try {
-                    const {to,subject,body} = JSON.parse(msg.content.toString());
+                    const {to,subject,body,html} = JSON.parse(msg.content.toString());
 
                     const transporter= nodemailer.createTransport({
                         host: "smtp.gmail.com",
@@ -41,6 +41,7 @@ export const startSendOtpConsumer = async () => {
                         to,
                         subject,
                         text: body,
+                        html,
                     });
 
                     console.log(`OTP Mail sent to ${to} `);

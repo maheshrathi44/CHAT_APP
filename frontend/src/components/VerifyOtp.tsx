@@ -28,6 +28,10 @@ const VerifyOtp = () => {
   const searchParams = useSearchParams();
 
   const email: string = searchParams.get("email") || "";
+  const flow: "login" | "register" =
+    searchParams.get("flow") === "register" ? "register" : "login";
+  const verifyEndpoint =
+    flow === "register" ? "/api/v1/register/verify" : "/api/v1/verify";
 
   useEffect(() => {
     if (timer > 0) {
@@ -81,7 +85,7 @@ const VerifyOtp = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post(`${user_service}/api/v1/verify`, {
+      const { data } = await axios.post(`${user_service}${verifyEndpoint}`, {
         email,
         otp: otpString,
       });
@@ -108,9 +112,15 @@ const VerifyOtp = () => {
     setResendLoading(true);
     setError("");
     try {
-      const { data } = await axios.post(`${user_service}/api/v1/login`, {
-        email,
-      });
+      const { data } =
+        flow === "register"
+          ? await axios.post(`${user_service}/api/v1/otp/resend`, {
+              email,
+              purpose: "verify your ChatApp account",
+            })
+          : await axios.post(`${user_service}/api/v1/login`, {
+              email,
+            });
       toast.success(data.message);
       setTimer(60);
     } catch (error: any) {
